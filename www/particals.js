@@ -93,7 +93,7 @@ particleTest = function() {
 
     canvas.addEventListener("touchstart", touchStart, false);
     canvas.addEventListener("touchmove", touchMove, false);
-    canvas.addEventListener("touchend", touchEnd, false);
+    canvas.addEventListener("touchend", touchEnd, false); //test
 
     function touchStart(event) {
         mouse.x = event.touches[0].pageX;
