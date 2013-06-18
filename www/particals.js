@@ -39,7 +39,8 @@ particleTest = function() {
     buildParticles(100);
     //set speed
     intSpeed = 33;
-    var nowPlaying;
+    var nowPlayingFire;
+    var nowPlayingSphere;
 
     //set intDrawOption
     intDrawOption = "source-over";
@@ -103,23 +104,35 @@ particleTest = function() {
     function touchStart(event) {
         touching = true;
         touchStart = new Date();
-        //mouse.x = event.touches[0].pageX;
-        //mouse.y = event.touches[0].pageY;
+        mouse.x = event.touches[0].pageX;
+        mouse.y = event.touches[0].pageY;
     }
 
     function touchEnd(event) {
         touching = false;
         touchLength = (new Date() - touchStart);
         if (touchLength > 1000) {
-            clearInterval(nowPlaying);
             if (playing === "fire") {
                 playing = "sphere";
-                nowPlaying = setInterval(render, 1000 / 30);
+                clearInterval(nowPlayingFire);
+                nowPlayingSphere = setInterval(render, 1000 / 30);
             } else {
                 playing = "fire";
-                nowPlaying = setInterval(draw, intSpeed);
+                clearInterval(nowPlayingSphere);
+                nowPlayingFire = setInterval(draw, intSpeed);
             }
         }
+    }
+
+    function newPlayer() {
+        if (playing === "fire") {
+            playing = "sphere";
+            nowPlayingSphere = setInterval(render, 1000 / 30);
+        } else {
+            playing = "fire";
+            nowPlaying = setInterval(draw, intSpeed);
+        }
+
     }
 
     function touchMove(event) {
