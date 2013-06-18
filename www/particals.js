@@ -96,7 +96,7 @@ particleTest = function() {
 
     canvas.addEventListener("touchstart", touchStart, false);
     //canvas.addEventListener("touchmove", touchMove, false);
-    canvas.addEventListener("touchend", touchEnd, false); //test
+    //canvas.addEventListener("touchend", touchEnd, false); //test
 
     var touchLength = 0;
     var touchStart = new Date();
