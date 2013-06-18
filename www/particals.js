@@ -92,8 +92,8 @@ particleTest = function() {
     }
 
     canvas.addEventListener("touchstart", touchStart, false);
-    canvas.addEventListener("touchmove", touchMove, false);
-    canvas.addEventListener("touchend", touchEnd, false); //test
+    //canvas.addEventListener("touchmove", touchMove, false);
+    //canvas.addEventListener("touchend", touchEnd, false); //test
 
     function touchStart(event) {
         mouse.x = event.touches[0].pageX;
@@ -106,7 +106,9 @@ particleTest = function() {
     }
 
     function touchMove(event) {
-        //event.preventDefault();
+        if (!e)
+            var e = event;
+        //e.preventDefault();
         mouse.x = event.targetTouches[0].pageX - canvas.offsetWidth;
         mouse.y = event.targetTouches[0].pageY - canvas.offsetTop;
     }
@@ -114,8 +116,15 @@ particleTest = function() {
     // onSuccess: Get a snapshot of the current acceleration
     //
     function onSuccess(acceleration) {
-        mouse.x = (mouse.offsetX / 2) + ((W / 20) * acceleration.x);
-        mouse.y = (mouse.offsetY / 2) + ((H / 20) * acceleration.y);
+        if (mouse.lastX != acceleration.x.toFixed(2)) {
+            mouse.x += ((W / 40) * acceleration.x);
+            mouse.lastX = acceleration.x.toFixed(2)
+        }
+        if (mouse.lastY != acceleration.x.toFixed(2)) {
+            mouse.y += ((H / 40) * acceleration.y);
+            mouse.lastY = acceleration.y.toFixed(2)
+        }
+        //mouse.y -= ((H / 40) * acceleration.y);
         //if (mouse.x < 0) mouse.x = 0;
         //if (mouse.x > W) mouse.x = W;
         //if (mouse.y < 0) mouse.y = 0;
@@ -211,9 +220,16 @@ particleTest = function() {
             this.location = { x: ((W / 4) * 3), y: ((H / 4)) };
             mouse.x = this.location.x;
             mouse.y = this.location.y;
-            mouse.offsetX = W - mouse.x;
-            mouse.offsetY = mouse.y;
+            mouse.lastX =  0;
+            mouse.lastY = 0;
         }
+
+        //make sure it stays on screen
+        if (this.location.x < 0) this.location.x = 0;
+        if (this.location.x > W) this.location.x = W;
+        if (this.location.y < 0) this.location.y = 0;
+        if (this.location.y > H) this.location.y = H;
+
         //radius range = 10-30
         this.radius = intRadius + Math.random() * 20;
         //life range = 20-30
@@ -234,7 +250,7 @@ particleTest = function() {
         ctx.globalCompositeOperation = "source-over";
         ctx.drawImage(base_image, 0, 0, W, H);
         ctx.font = "20px Arial";
-        ctx.strokeText("Tilt your mobile to throw the flame!", 10, (H-40));
+        ctx.strokeText("Tilt and touch to control the flame!", 10, (H-40));
 
         //ctx.fillStyle = "black";
         //ctx.fillRect(0, 0, W, H);
@@ -269,5 +285,5 @@ particleTest = function() {
         }
     }
 
-    //startWatch();
+    startWatch();
 }
