@@ -103,8 +103,8 @@ particleTest = function() {
     function touchStart(event) {
         touching = true;
         touchStart = new Date();
-        mouse.x = event.touches[0].pageX;
-        mouse.y = event.touches[0].pageY;
+        //mouse.x = event.touches[0].pageX;
+        //mouse.y = event.touches[0].pageY;
     }
 
     function touchEnd(event) {
