@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width;" />
+	<title>Accelerometer Data</title>
+
+	<script type="text/javascript" 
+			src="cordova-2.0.0.js"></script>
+
+	<!-- Add PhoneGap script here -->
+	<script type="text/javascript">
+
+	// Set the event listener to run 
+	// when the device is ready
+   	document.addEventListener("deviceready", onDeviceReady, false);
+	
+	// The device is ready so let's 
+	// obtain the current accelerometer data
+	function onDeviceReady() {
+	    startWatch();
+	}
+
+	// Start watching the acceleration
+	function startWatch() {
+	    // Update acceleration every 3 seconds
+	    var options = { frequency: 100 };
+	    watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
+	}
+
+	// Stop watching the acceleration
+	function stopWatch() {
+	    if (watchID) {
+	        navigator.accelerometer.clearWatch(watchID);
+	        watchID = null;
+	    }
+	}
+
+	// Start watching the acceleration
+	//
+	function startWatch() {
+
+	    // Update acceleration every 3 seconds
+	    var options = { frequency: 100 };
+
+	    watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
+	}
+
+	// Stop watching the acceleration
+	//
+	function stopWatch() {
+	    if (watchID) {
+	        navigator.accelerometer.clearWatch(watchID);
+	        watchID = null;
+	    }
+	}
+
+	// onSuccess: Get a snapshot of the current acceleration
+	//
+	function onSuccess(acceleration) {
+	    var element = document.getElementById('accelerometer');
+	    element.innerHTML = 'Acceleration X: ' + acceleration.x + '<br />' +
+                            'Acceleration Y: ' + acceleration.y + '<br />' +
+                            'Acceleration Z: ' + acceleration.z + '<br />' +
+                            'Timestamp: ' + acceleration.timestamp + '<br />';
+	}
+
+	// onError: Failed to get the acceleration
+	//
+	function onError() {
+	    alert('onError!');
+	}
+	
+	</script>
+
+
+</head>
+<body>
+
+	<h1>Accelerometer Data</h1>
+
+	<div id="accelerometer">Obtaining data...</div>
+
+</body>
+</html>
