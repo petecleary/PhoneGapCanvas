@@ -44,6 +44,8 @@ particleTest = function() {
     //set intDrawOption
     intDrawOption = "source-over";
 
+    var playing = "fire";
+
     var base_image;
     make_base();
 
@@ -93,16 +95,31 @@ particleTest = function() {
 
     canvas.addEventListener("touchstart", touchStart, false);
     //canvas.addEventListener("touchmove", touchMove, false);
-    //canvas.addEventListener("touchend", touchEnd, false); //test
+    canvas.addEventListener("touchend", touchEnd, false); //test
 
+    var touchLength = 0;
+    var touchStart = new Date();
+    var touching = false;
     function touchStart(event) {
+        touching = true;
+        touchStart = new Date();
         mouse.x = event.touches[0].pageX;
         mouse.y = event.touches[0].pageY;
     }
 
     function touchEnd(event) {
-        mouse.x = event.touches[0].pageX;
-        mouse.y = event.touches[0].pageY;
+        touching = false;
+        touchLength = (new Date() - touchStart);
+        if (touchLength > 1000) {
+            clearInterval(nowPlaying);
+            if (playing === "fire") {
+                playing = "sphere";
+                nowPlaying = setInterval(render, 1000 / 30);
+            } else {
+                playing = "fire";
+                nowPlaying = setInterval(draw, intSpeed);
+            }
+        }
     }
 
     function touchMove(event) {
@@ -249,8 +266,11 @@ particleTest = function() {
         //previous frame
         ctx.globalCompositeOperation = "source-over";
         ctx.drawImage(base_image, 0, 0, W, H);
-        ctx.font = "20px Arial";
-        ctx.strokeText("Tilt and touch to control the flame!", 10, (H-40));
+        ctx.fillStyle = 'black';
+        ctx.font = "18px Arial";
+        ctx.strokeText("Touch or tilt to move flame", 10, (H - 40));
+        ctx.font = "18px Arial";
+        ctx.strokeText("Touch for 1 second to change animation", 10, (H - 20));
 
         //ctx.fillStyle = "black";
         //ctx.fillRect(0, 0, W, H);
@@ -285,5 +305,179 @@ particleTest = function() {
         }
     }
 
+    var sphere = new Sphere3D();
+    var rotation = 0;
+    var distance = 0;
+
+    function Point3D() {
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.selected = false;
+        this.color = function () { var c = (this.selected) ? "rgba(100, 100, 100, 0.6)" : "rgba(200, 200, 200, 0.6)"; return c; }
+        this.gradient = function () { var c = (this.selected) ? "rgb(200,0,0)" : "rgb(0,200,0)"; return c; }
+    }
+
+    function Sphere3D(radius) {
+        this.point = new Array();
+        this.color = "rgb(100,0,255)"
+        this.radius = (typeof (radius) == "undefined") ? 20.0 : radius;
+        this.radius = (typeof (radius) != "number") ? 20.0 : radius;
+        this.numberOfVertexes = 0;
+
+        // Ciclo da 0ø a 360ø con passo di 10ø...calcola la circonf. di mezzo
+        for (alpha = 0; alpha <= 6.28; alpha += 0.17) {
+            p = this.point[this.numberOfVertexes] = new Point3D();
+
+            p.x = Math.cos(alpha) * this.radius;
+            p.y = 0;
+            p.z = Math.sin(alpha) * this.radius;
+
+            this.numberOfVertexes++;
+        }
+
+        // Ciclo da 0ø a 90ø con passo di 10ø...calcola la prima semisfera (direction = 1)
+        // Ciclo da 0ø a 90ø con passo di 10ø...calcola la seconda semisfera (direction = -1)
+
+        for (var direction = 1; direction >= -1; direction -= 2) {
+            for (var beta = 0.17; beta < 1.445; beta += 0.17) {
+                var radius = Math.cos(beta) * this.radius;
+                var fixedY = Math.sin(beta) * this.radius * direction;
+
+                for (var alpha = 0; alpha < 6.28; alpha += 0.17) {
+                    p = this.point[this.numberOfVertexes] = new Point3D();
+
+                    p.x = Math.cos(alpha) * radius;
+                    p.y = fixedY;
+                    p.z = Math.sin(alpha) * radius;
+
+                    this.numberOfVertexes++;
+                }
+            }
+        }
+
+    }
+
+    function rotateX(point, radians) {
+        var y = point.y;
+        point.y = (y * Math.cos(radians)) + (point.z * Math.sin(radians) * -1.0);
+        point.z = (y * Math.sin(radians)) + (point.z * Math.cos(radians));
+    }
+
+    function rotateY(point, radians) {
+        var x = point.x;
+        point.x = (x * Math.cos(radians)) + (point.z * Math.sin(radians) * -1.0);
+        point.z = (x * Math.sin(radians)) + (point.z * Math.cos(radians));
+    }
+
+    function rotateZ(point, radians) {
+        var x = point.x;
+        point.x = (x * Math.cos(radians)) + (point.y * Math.sin(radians) * -1.0);
+        point.y = (x * Math.sin(radians)) + (point.y * Math.cos(radians));
+    }
+
+    function projection(xy, z, xyOffset, zOffset, distance) {
+        return ((distance * xy) / (z - zOffset)) + xyOffset;
+    }
+
+    function render() {
+        var width = W;
+        var height = H;
+        var x, y;
+
+        var p = new Point3D();
+
+        ctx.save();
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.globalCompositeOperation = "lighter";
+
+        for (i = 0; i < sphere.numberOfVertexes; i++) {
+
+            p.x = sphere.point[i].x;
+            p.y = sphere.point[i].y;
+            p.z = sphere.point[i].z;
+
+
+            rotateX(p, rotation);
+            rotateY(p, rotation);
+            rotateZ(p, rotation);
+
+            x = projection(p.x, p.z, width / 2.0, 100.0, distance);
+            y = projection(p.y, p.z, height / 2.0, 100.0, distance);
+
+            if ((x >= 0) && (x < width)) {
+                if ((y >= 0) && (y < height)) {
+                    if (touching && x.toFixed(0) > mouse.x && x.toFixed(0) < mouse.x + 20 && y.toFixed(0) > mouse.y && y.toFixed(0) < mouse.y + 20) {
+                        sphere.point[i].selected = !sphere.point[i].selected;
+                    }
+                    if (p.z < 0) {
+                        drawPoint(ctx, x, y, 4, sphere.point[i].color());
+                    } else {
+                        drawPointWithGradient(ctx, x, y, 10, sphere.point[i].gradient(), 0.8);
+                    }
+                }
+            }
+        }
+        ctx.restore();
+        ctx.fillStyle = "rgb(150,150,150)";
+        ctx.fillText("Touch balls to change their colour", 10, (H - 40));
+        ctx.fillText("Touch for 1 second to change animation", 10, (H - 20));
+        rotation += Math.PI / 90.0;
+
+        if (distance < 700) {
+            distance += 10;
+        }
+    }
+
+    function drawPoint(ctx, x, y, size, color) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(x, y, size, 0, 2 * Math.PI, true);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawPointWithGradient(ctx, x, y, size, color, gradient) {
+        var reflection;
+
+        reflection = size / 4;
+
+        ctx.save();
+        ctx.translate(x, y);
+        var radgrad = ctx.createRadialGradient(-reflection, -reflection, reflection, 0, 0, size);
+
+        radgrad.addColorStop(0, '#FFFFFF');
+        radgrad.addColorStop(gradient, color);
+        radgrad.addColorStop(1, 'rgba(1,159,98,0)');
+
+        ctx.fillStyle = radgrad;
+        ctx.fillRect(-size, -size, size * 2, size * 2);
+        ctx.restore();
+    }
+    
+    function drawHalo(ctx, x, y, size, color, gradient) {
+        var reflection;
+
+        reflection = size / 4;
+
+        ctx.save();
+        ctx.translate(x, y);
+        var radgrad = ctx.createRadialGradient(0, 0, reflection, 0, 0, size);
+
+        radgrad.addColorStop(0, '#FFFFFF');
+        radgrad.addColorStop(gradient, color);
+        radgrad.addColorStop(1, 'rgba(1,159,98,0)');
+
+        ctx.fillStyle = radgrad;
+        ctx.fillRect(-size, -size, size * 2, size * 2);
+        ctx.restore();
+    }
+
     startWatch();
+
+
 }
