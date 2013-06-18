@@ -42,7 +42,19 @@ particleTest = function() {
     var nowPlaying;
 
     //set intDrawOption
-    intDrawOption = "lighter";
+    intDrawOption = "source-over";
+
+    var base_image;
+    make_base();
+
+    function make_base() {
+        base_image = new Image();
+        base_image.src = 'splash.png';
+        base_image.onload = function () {
+            ctx.drawImage(base_image, 0, 0, W, H);
+            nowPlaying = setInterval(draw, intSpeed);
+        }
+    }
 
     this.rebuildParticles = function(particle_count) {
         buildParticles(particle_count);
@@ -79,11 +91,36 @@ particleTest = function() {
         //
     }
 
+    canvas.addEventListener("touchstart", touchStart, false);
+    canvas.addEventListener("touchmove", touchMove, false);
+    canvas.addEventListener("touchend", touchEnd, false);
+
+    function touchStart(event) {
+        mouse.x = event.touches[0].pageX;
+        mouse.y = event.touches[0].pageY;
+    }
+
+    function touchEnd(event) {
+        mouse.x = event.touches[0].pageX;
+        mouse.y = event.touches[0].pageY;
+    }
+
+    function touchMove(event) {
+        //event.preventDefault();
+        mouse.x = event.targetTouches[0].pageX - canvas.offsetWidth;
+        mouse.y = event.targetTouches[0].pageY - canvas.offsetTop;
+    }
+
     // onSuccess: Get a snapshot of the current acceleration
     //
     function onSuccess(acceleration) {
-        mouse.x = (W/2) + ((W/20) * acceleration.x);
-        mouse.y = (H/2) + ((H/20) * acceleration.y);
+        mouse.x = (mouse.offsetX / 2) + ((W / 20) * acceleration.x);
+        mouse.y = (mouse.offsetY / 2) + ((H / 20) * acceleration.y);
+        //if (mouse.x < 0) mouse.x = 0;
+        //if (mouse.x > W) mouse.x = W;
+        //if (mouse.y < 0) mouse.y = 0;
+        //if (mouse.y > H) mouse.y = H;
+        //mouse.y = (H / 2) + ((H / 20) * acceleration.y) + mouse.offsetY;;
     }
 
     this.setRange = function(direction) {
@@ -171,7 +208,11 @@ particleTest = function() {
             this.location = { x: mouse.x, y: mouse.y };
         }
         else {
-            this.location = { x: W / 2, y: H / 2 };
+            this.location = { x: ((W / 4) * 3), y: ((H / 4)) };
+            mouse.x = this.location.x;
+            mouse.y = this.location.y;
+            mouse.offsetX = W - mouse.x;
+            mouse.offsetY = mouse.y;
         }
         //radius range = 10-30
         this.radius = intRadius + Math.random() * 20;
@@ -191,8 +232,12 @@ particleTest = function() {
         //In the next frame the background is painted normally without blending to the 
         //previous frame
         ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, W, H);
+        ctx.drawImage(base_image, 0, 0, W, H);
+        ctx.font = "20px Arial";
+        ctx.strokeText("Tilt your mobile to throw the flame!", 10, (H-40));
+
+        //ctx.fillStyle = "black";
+        //ctx.fillRect(0, 0, W, H);
         ctx.globalCompositeOperation = intDrawOption;
 
         for(var i = 0; i < particles.length; i++) {
@@ -224,6 +269,5 @@ particleTest = function() {
         }
     }
 
-    startWatch();
-    nowPlaying = setInterval(draw, intSpeed);
+    //startWatch();
 }
